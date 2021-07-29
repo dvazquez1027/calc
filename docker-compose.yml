@@ -1,0 +1,66 @@
+version: "3.8"
+services:
+  calc-serverless:
+    depends_on:
+      - dynamodb
+      - memcached
+      - dynamodb-init
+    image: calc-serverless
+    hostname: calc-serverless
+    build:
+      context: ../calc-serverless/.
+    ports:
+      - 3000:3000
+    volumes: 
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "~/.aws:/root/.aws"
+    networks:
+      calc:
+    command: ["--docker-network", "calc_calc", "--profile", "local", "--region", "us-east-1", "--env-vars", "env.json", "--host", "0.0.0.0"]
+        
+  calc-ui-web:
+    image: calc-ui-web
+    hostname: calc-ui-web
+    build:
+      context: ../calc-ui-web/.
+    ports:
+      - 5000:5000
+    networks:
+      calc:
+
+  dynamodb:
+    image: amazon/dynamodb-local
+    hostname: dynamodb
+    ports:
+      - 8000:8000
+    networks:
+      calc:
+    command: ["-jar", "DynamoDBLocal.jar"]
+
+  dynamodb-init:
+    depends_on:
+      - dynamodb
+    image: amazon/aws-cli
+    hostname: dynamodb-init
+    volumes:
+      - "./.local-env/dynamodb/.aws:/root/.aws"
+    networks:
+      calc:
+    command: >
+      dynamodb create-table
+        --table-name Calculators
+        --attribute-definitions AttributeName=id,AttributeType=S
+        --key-schema AttributeName=id,KeyType=HASH
+        --endpoint-url http://dynamodb:8000
+        --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1
+
+  memcached:
+    image: memcached
+    hostname: memcached
+    ports:
+      - 11211:11211
+    networks:
+      calc:
+
+networks:
+  calc:
