@@ -15,7 +15,7 @@ services:
       - "$DOCKER_VOLUME_BASEDIR:$DOCKER_VOLUME_BASEDIR"
     networks:
       calc:
-    command: "$DOCKER_VOLUME_BASEDIR/run.sh --docker-volume-basedir $DOCKER_VOLUME_BASEDIR --docker-network calc_calc --profile local --region us-east-1 --env-vars env.json --host 0.0.0.0 --container-host host.docker.internal"
+    command: "$DOCKER_VOLUME_BASEDIR/run.sh --docker-volume-basedir $DOCKER_VOLUME_BASEDIR --docker-network calc_calc --profile local --region us-east-1 --env-vars env.json --host 0.0.0.0 --container-host host.docker.internal --warm-containers EAGER"
         
   calc-ui-web:
     image: calc-ui-web
