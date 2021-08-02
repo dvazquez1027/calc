@@ -6,26 +6,28 @@ services:
       - memcached
       - dynamodb-init
     image: amazon/aws-sam-cli-build-image-nodejs12.x
-    hostname: calc-serverless
-    ports:
-      - 3000:3000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - "~/.aws:/root/.aws"
       - "$DOCKER_VOLUME_BASEDIR:$DOCKER_VOLUME_BASEDIR"
+    hostname: calc-serverless
+    ports:
+      - 3000:3000
     networks:
       calc:
     command: "$DOCKER_VOLUME_BASEDIR/run.sh --docker-volume-basedir $DOCKER_VOLUME_BASEDIR --docker-network calc_calc --profile local --region us-east-1 --env-vars env.json --host 0.0.0.0 --container-host host.docker.internal --warm-containers EAGER"
         
   calc-ui-web:
-    image: calc-ui-web
+    image: node:14.15
+    volumes:
+      - "../calc-ui-web:/app"
+    working_dir: "/app"
     hostname: calc-ui-web
-    build:
-      context: ../calc-ui-web/.
     ports:
-      - 5000:5000
+      - 5000:8080
     networks:
       calc:
+    entrypoint: '/bin/sh -c "npm ci && npm run serve"'
 
   dynamodb:
     image: amazon/dynamodb-local
